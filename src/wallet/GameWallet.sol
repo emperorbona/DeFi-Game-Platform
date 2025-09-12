@@ -22,7 +22,7 @@ contract GameWallet is ReentrancyGuard, AccessControl {
     mapping(address => mapping(address => bool)) private s_approvedGames; // User -> Game -> Approved
     
     AggregatorV3Interface private s_priceFeed;
-    uint256 private constant MINIMUM_DEPOSIT_USD = 1; // $1 minimum
+    uint256 private constant MINIMUM_DEPOSIT_USD = 1e18; // $1 minimum
     
     using PriceConverter for uint256;
 

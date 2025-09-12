@@ -15,6 +15,7 @@ contract DeployGameWallet is Script{
 
     vm.startBroadcast();
     gameWallet= new GameWallet(ethPriceFeed);
+    gameWallet.grantRole(gameWallet.DEFAULT_ADMIN_ROLE(), msg.sender);
     vm.stopBroadcast();
     return(gameWallet);
     }

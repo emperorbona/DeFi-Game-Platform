@@ -36,7 +36,7 @@ contract DiceGame is ReentrancyGuard, VRFConsumerBaseV2 {
     uint32 private immutable i_callbackGasLimit;
 
     // Game Management
-    uint256 private constant MINIMUM_STAKE_USD = 1; // $1 minimum stake
+    uint256 private constant MINIMUM_STAKE_USD = 1e18; // $1 minimum stake
     uint256 private gameCounter;
 
     // Game Structure
