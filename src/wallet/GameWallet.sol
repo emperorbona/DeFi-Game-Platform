@@ -86,6 +86,9 @@ contract GameWallet is ReentrancyGuard, AccessControl {
         if (amount > s_balances[user]) {
             revert GameWallet__InsufficientBalance();
         }
+        if(amount <= 0){
+            revert GameWallet__AmountTooSmall();
+        }
         
         s_balances[user] -= amount;
         return true;
@@ -96,6 +99,9 @@ contract GameWallet is ReentrancyGuard, AccessControl {
         external 
         onlyRole(GAME_CONTRACT_ROLE) 
     {
+        if(amount == 0){
+            revert GameWallet__AmountTooSmall();
+        }
         s_balances[user] += amount;
         emit FundsReceivedFromGame(user, msg.sender, amount);
     }
