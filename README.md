@@ -1,66 +1,132 @@
-## Foundry
+# 🎲 DeFi Game Platform
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+A decentralized gaming platform starting with a **provably fair on-chain Dice Game**, built on the Avalanche Fuji Testnet and powered by Chainlink VRF for secure randomness.
 
-Foundry consists of:
+This project demonstrates how on-chain games can be transparent, trustless, and fun—while integrating DeFi mechanics such as staking and automated payouts.
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+---
 
-## Documentation
+## ✨ Features
 
-https://book.getfoundry.sh/
+### Dice Game
 
-## Usage
+* **Stake & Play**: Two players stake AVAX (minimum \$1 USD equivalent) and roll virtual dice.
+* **Provably Fair Randomness**: Chainlink VRF generates unbiased dice rolls.
+* **Automated Payouts**: Winners are paid instantly from the GameWallet smart contract.
+* **Dynamic Game Fee**: 3% standard fee, 5% for higher-pot games.
 
-### Build
+### GameWallet
 
-```shell
-$ forge build
+* **Per-User Balances**: Each player deposits AVAX into their own balance inside the contract.
+* **Secure Fund Handling**: Supports deposits, withdrawals, and fund locking during active games.
+* **Access Control**: Only approved game contracts can deduct stakes.
+
+### AdminWallet
+
+* **Fee Collection**: Receives game fees and stores them securely.
+* **Role-Based Access**: Uses OpenZeppelin AccessControl for admin permissions.
+* **Flexible Management**: Owner can withdraw or update settings when needed.
+
+---
+
+## 🏽️ Architecture
+
+```
+Players <-> GameWallet <-> DiceGame
+                          |
+                       Chainlink VRF
+                          |
+                       AdminWallet (collects fees)
 ```
 
-### Test
+* **DiceGame.sol** – Core gameplay logic, VRF randomness, fee handling.
+* **GameWallet.sol** – Manages user deposits, stakes, and winnings.
+* **AdminWallet.sol** – Stores and manages platform fees.
+* **PriceConverter.sol** – Chainlink price feeds to enforce minimum \$1 stakes.
 
-```shell
-$ forge test
+---
+
+## 🚀 Deployment
+
+1. **Clone the repo**
+
+   ```bash
+   git clone https://github.com/<your-username>/defi-game-platform.git
+   cd defi-game-platform
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   forge install
+   ```
+
+3. **Set environment variables**
+   Create a `.env` file and set:
+
+   ```
+   PRIVATE_KEY=<your-wallet-key>
+   RPC_URL=<avalanche-fuji-rpc>
+   VRF_COORDINATOR=<chainlink-vrf-coordinator>
+   LINK_TOKEN=<link-token-address>
+   KEY_HASH=<vrf-keyhash>
+   SUBSCRIPTION_ID=<chainlink-sub-id>
+   ```
+
+4. **Deploy**
+
+   ```bash
+   forge script script/diceGameDeploy/DeployDiceGame.s.sol --broadcast --verify
+   ```
+
+---
+
+## 🧪 Testing
+
+Unit and integration tests are written with **Foundry**.
+
+```bash
+forge test
 ```
 
-### Format
+Tests include:
 
-```shell
-$ forge fmt
-```
+* Game creation and joining
+* VRF randomness fulfillment
+* Winnings distribution
+* AdminWallet fee collection and withdrawals
+* Edge cases for deposits/withdrawals
 
-### Gas Snapshots
+---
 
-```shell
-$ forge snapshot
-```
+## 🛠️ Tech Stack
 
-### Anvil
+* **Solidity ^0.8.20**
+* **Foundry** (Forge & Cast)
+* **Chainlink VRF & Price Feeds**
+* **OpenZeppelin AccessControl & ReentrancyGuard**
+* **Avalanche Fuji Testnet**
 
-```shell
-$ anvil
-```
+---
 
-### Deploy
+## 🗺️ Roadmap
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
+* [x] Core Dice Game with VRF randomness
+* [x] GameWallet and AdminWallet contracts
+* [x] Dynamic fee structure
+* [ ] Frontend UI with wallet connection
+* [ ] Multi-game support (chess, tic-tac-toe, etc.)
+* [ ] Mainnet deployment and audit
 
-### Cast
+---
 
-```shell
-$ cast <subcommand>
-```
+## 🤝 Contributing
 
-### Help
+Pull requests are welcome!
+If you’d like to join as a developer or collaborator, open an issue or reach out.
 
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+---
+
+## 📜 License
+
+MIT License © 2025 \Bonaventure Edetan
