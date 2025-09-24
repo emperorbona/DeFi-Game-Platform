@@ -10,7 +10,7 @@ contract CreateSubscription is Script{
 
     function createNewSubscriptionUsingConfig() public returns(uint64){
         HelperConfig helperConfig = new HelperConfig();
-        (address vrfCoordinator,,,,,,) = helperConfig.activeNetworkConfig();
+        (address vrfCoordinator,,,,,,,) = helperConfig.activeNetworkConfig();
         return createSubscription(vrfCoordinator);
     }
     function createSubscription(address vrfCoordinator) public returns(uint64){
@@ -38,7 +38,7 @@ contract FundSubscription is Script{
 
     function fundSubscriptionUsingConfig() public {
          HelperConfig helperConfig = new HelperConfig();
-        (address vrfCoordinator,,,,uint64 subId,,address link) = helperConfig.activeNetworkConfig();
+        (address vrfCoordinator,,,,uint64 subId,,,address link) = helperConfig.activeNetworkConfig();
         fundSubscription(vrfCoordinator, subId, link);
     }
 
@@ -82,7 +82,7 @@ contract AddConsumer is Script{
 
     function addConsumerUsingConfig(address diceGame) public{
         HelperConfig helperConfig = new HelperConfig();
-        (address vrfCoordinator,,,,uint64 subId,,) = helperConfig.activeNetworkConfig();
+        (address vrfCoordinator,,,,uint64 subId,,,) = helperConfig.activeNetworkConfig();
         addConsumer(diceGame,vrfCoordinator,subId);
     }
     function run() external{

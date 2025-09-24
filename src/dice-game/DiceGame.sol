@@ -7,6 +7,7 @@ import {VRFCoordinatorV2Interface} from "@chainlink/contracts/src/v0.8/vrf/inter
 import {VRFConsumerBaseV2} from "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol";
 import {PriceConverter} from "../libraries/PriceConverter.sol";
 import {GameWallet} from "../wallet/GameWallet.sol";
+import {AdminWallet} from "../admin/AdminWallet.sol";
 
 contract DiceGame is ReentrancyGuard, VRFConsumerBaseV2 {
     // Errors
@@ -20,6 +21,7 @@ contract DiceGame is ReentrancyGuard, VRFConsumerBaseV2 {
     error DiceGame__WalletInteractionFailed();
     error DiceGame__InsufficientWalletBalance();
     error DiceGame__RequestAlreadyPending();
+    error DiceGame__FeeDepositFailed();
 
     using PriceConverter for uint256;
 
@@ -27,6 +29,7 @@ contract DiceGame is ReentrancyGuard, VRFConsumerBaseV2 {
     VRFCoordinatorV2Interface private immutable i_vrfCoordinator;
     AggregatorV3Interface private s_priceFeed;
     GameWallet private immutable i_gameWallet;
+    AdminWallet private immutable i_adminWallet;
 
     uint16 private constant REQUEST_CONFIRMATION = 2;
     uint32 private constant NUM_WORDS = 1;
@@ -71,7 +74,8 @@ contract DiceGame is ReentrancyGuard, VRFConsumerBaseV2 {
         address gameWallet,
         bytes32 gasLane,
         uint64 subscriptionId,
-        uint32 callbackGasLimit
+        uint32 callbackGasLimit,
+        address adminWallet
     ) VRFConsumerBaseV2(vrfCoordinator) {
         i_vrfCoordinator = VRFCoordinatorV2Interface(vrfCoordinator);
         s_priceFeed = AggregatorV3Interface(priceFeed);
@@ -79,6 +83,7 @@ contract DiceGame is ReentrancyGuard, VRFConsumerBaseV2 {
         i_gasLane = gasLane;
         i_subscriptionId = subscriptionId;
         i_callbackGasLimit = callbackGasLimit;
+        i_adminWallet = AdminWallet(payable(adminWallet));
     }
 
     // Helper view to check approval
@@ -200,17 +205,38 @@ contract DiceGame is ReentrancyGuard, VRFConsumerBaseV2 {
     function _resolveGame(uint256 gameId) internal {
         GAMEPLAY storage game = s_gameInPlay[gameId];
         uint256 totalPot = game.stake * 2;
+        uint256 gameFee;
+        
+
+        uint256 potUsd = totalPot.getConversionRate(s_priceFeed);
+        if (potUsd <= 5e18) {           // 5 USD with 18 decimals
+            gameFee = (totalPot * 5) / 100;
+        } else {
+            gameFee = (totalPot * 3) / 100;
+        }
+
+
+        uint256 totalWins = totalPot - gameFee;
+
+        if (gameFee > 0) {
+              (bool success, ) = address(i_adminWallet).call{value: gameFee}(
+            abi.encodeWithSignature("depositFee()")
+            );
+            if(!success) {
+                revert DiceGame__FeeDepositFailed();
+            }
+        }
 
         if (game.dice1 > game.dice2) {
             game.winner = game.player1;
-            i_gameWallet.addWinnings(game.player1, totalPot);
+            i_gameWallet.addWinnings(game.player1, totalWins);
         } else if (game.dice1 < game.dice2) {
             game.winner = game.player2;
-            i_gameWallet.addWinnings(game.player2, totalPot);
+            i_gameWallet.addWinnings(game.player2, totalWins);
         } else {
             // Tie - refund both players
-            i_gameWallet.addWinnings(game.player1, game.stake);
-            i_gameWallet.addWinnings(game.player2, game.stake);
+            i_gameWallet.addWinnings(game.player1, (totalWins/2));
+            i_gameWallet.addWinnings(game.player2, (totalWins/2));
             game.winner = address(0);
         }
 

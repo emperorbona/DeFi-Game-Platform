@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Script} from "forge-std/Script.sol";
-import {GameWallet} from "../../src/wallet/GameWallet.sol";
+import {AdminWallet} from "../../src/admin/AdminWallet.sol"; 
 import {MockV3Aggregator} from "../../test/mocks/MockV3Aggregator.sol";
 
 contract HelperConfig is Script{

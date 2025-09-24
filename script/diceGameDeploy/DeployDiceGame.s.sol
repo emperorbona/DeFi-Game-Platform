@@ -18,7 +18,9 @@ contract DeployDiceGame is Script {
         bytes32 gasLane,
         uint64 subscriptionId,
         uint32 callbackGasLimit,
-        address link) = helperConfig.activeNetworkConfig();
+        address adminWallet,
+        address link
+        ) = helperConfig.activeNetworkConfig();
 
         if(subscriptionId == 0){
             // We are going to create a subscription
@@ -41,7 +43,8 @@ contract DeployDiceGame is Script {
          gameWallet,
          gasLane,
          subscriptionId,
-         callbackGasLimit
+         callbackGasLimit,
+         payable(adminWallet)
         );
         vm.stopBroadcast();
 

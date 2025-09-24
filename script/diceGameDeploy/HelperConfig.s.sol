@@ -8,6 +8,8 @@ import {DeployGameWallet} from "../gameWalletDeploy/DeployGameWallet.s.sol";
 import {MockV3Aggregator} from "../../test/mocks/MockV3Aggregator.sol";
 import {LinkToken} from "../../test/mocks/LinkToken.sol";
 import {VRFCoordinatorV2Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2Mock.sol";
+import {AdminWallet} from "../../src/admin/AdminWallet.sol";
+import {DeployAdminWallet} from "../adminWalletDeploy/DeployAdminWallet.s.sol";
 
 contract HelperConfig is Script {
     struct NetworkConfig {
@@ -17,6 +19,7 @@ contract HelperConfig is Script {
         bytes32 gasLane;
         uint64 subscriptionId;
         uint32 callbackGasLimit;
+        address adminWallet;
         address link;
     }
 
@@ -25,6 +28,11 @@ contract HelperConfig is Script {
     DeployGameWallet deployWallet = new DeployGameWallet();
 
     GameWallet gameWallet = deployWallet.run();
+
+    DeployAdminWallet deployAdminWallet = new DeployAdminWallet();
+
+    AdminWallet adminWallet = deployAdminWallet.run();
+
 
     uint8 public constant DECIMALS = 8;
     int256 public constant INITIAL_PRICE = 2000e8;
@@ -59,7 +67,9 @@ contract HelperConfig is Script {
             gasLane: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
             subscriptionId:0, // Add your subscription ID here
             callbackGasLimit: 500000,
+            adminWallet: address(adminWallet),
             link: 0x779877A7B0D9E8603169DdbD7836e478b4624789
+            
         });
     }
     function getAvalancheFujiConfig() public view returns (NetworkConfig memory fujiConfig) {
@@ -70,6 +80,7 @@ contract HelperConfig is Script {
             gasLane: 0xc799bd1e3bd4d1a41cd4968997a4e03dfd2a3c7c04b695881138580163f42887,
             subscriptionId:0, // Add your subscription ID here
             callbackGasLimit: 500000,
+            adminWallet: address(adminWallet),
             link: 0x0b9d5D9136855f6FEc3c0993feE6E9CE8a297846
         });
     }
@@ -81,7 +92,9 @@ contract HelperConfig is Script {
             gasLane: 0xe227ebd10a873dde8e58841197a07b410038e405f1180bd117be6f6557fa491c,
             subscriptionId:0, // Add your subscription ID here
             callbackGasLimit: 500000,
+            adminWallet: address (adminWallet),
             link:0x5947BB275c521040051D82396192181b413227A3
+            
         });
     }
     function getBaseSepoliaConfig() public view returns (NetworkConfig memory baseSepoliaConfig) {
@@ -92,7 +105,9 @@ contract HelperConfig is Script {
             gasLane: 0x9e1344a1247c8a1785d0a4681a27152bffdb43666ae5bf7d14d24a5efd44bf71, 
             subscriptionId:0, // Add your subscription ID here
             callbackGasLimit: 500000,
+            adminWallet: address (adminWallet),
             link: 0xE4aB69C077896252FAFBD49EFD26B5D171A32410
+            
         });
     }
     function getBaseMainnetConfig() public view returns (NetworkConfig memory baseMainnetConfig) {
@@ -103,7 +118,9 @@ contract HelperConfig is Script {
             gasLane: 0xdc2f87677b01473c763cb0aee938ed3341512f6057324a584e5944e786144d70, 
             subscriptionId:0, // Add your subscription ID here
             callbackGasLimit: 500000,
+            adminWallet: address(adminWallet),
             link: 0x88Fb150BDc53A65fe94Dea0c9BA0a6dAf8C6e196
+            
         });
     }   
 
@@ -136,7 +153,9 @@ contract HelperConfig is Script {
             gasLane: 0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c,
             subscriptionId: 1, // Mock subscription ID
             callbackGasLimit: 500000,
+            adminWallet: address(adminWallet),
             link: address(link)
+            
         });
     }
 }
