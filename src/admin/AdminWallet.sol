@@ -7,6 +7,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import {PriceConverter} from "../libraries/PriceConverter.sol";
 
+
 contract AdminWallet is Ownable, ReentrancyGuard,AccessControl {
     using PriceConverter for uint256;
 
@@ -50,9 +51,9 @@ contract AdminWallet is Ownable, ReentrancyGuard,AccessControl {
         if (msg.value == 0) {
             revert AdminWallet__InsufficientAmount();
         }
-        if (msg.value.getConversionRate(s_priceFeed) < MINIMUM_USD) {
-            revert AdminWallet__InsufficientAmount();
-        }
+        // if (msg.value.getConversionRate(s_priceFeed) < MINIMUM_USD) {
+        //     revert AdminWallet__InsufficientAmount();
+        // }
         gameFees[msg.sender] += msg.value;
         emit FeeDeposited(msg.sender, msg.value);
     }
@@ -64,13 +65,13 @@ contract AdminWallet is Ownable, ReentrancyGuard,AccessControl {
     // // Fallback function is called when msg.data is not empty
     // fallback() external payable {}
 
-    function withdraw(uint256 amount) external onlyOwner {
+    function withdraw(uint256 amount) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrant {
         if (amount == 0) {
             revert AdminWallet__InsufficientAmount();
         }
-        if (amount.getConversionRate(s_priceFeed) < MINIMUM_USD) {
-            revert AdminWallet__InsufficientAmount();
-        }
+        // if (amount.getConversionRate(s_priceFeed) < MINIMUM_USD) {
+        //     revert AdminWallet__InsufficientAmount();
+        // }
         if (address(this).balance < amount) {
             revert AdminWallet__InsufficientBalance();
         }
@@ -99,5 +100,8 @@ contract AdminWallet is Ownable, ReentrancyGuard,AccessControl {
 
     function getPriceFeed() external view returns (address) {
         return address(s_priceFeed);
+    }
+    function getMinimumUSD() external pure returns(uint256){
+        return MINIMUM_USD;
     }
 }

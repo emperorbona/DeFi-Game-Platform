@@ -49,7 +49,7 @@ contract GameWallet is ReentrancyGuard, AccessControl {
     }
 
     function deposit() external payable nonReentrant {
-        if (msg.value.getConversionRate(s_priceFeed) < MINIMUM_DEPOSIT_USD) {
+        if (msg.value.getUsdAmountInEth(s_priceFeed) < MINIMUM_DEPOSIT_USD) {
             revert GameWallet__InsufficientAmount();
         }
         s_balances[msg.sender] += msg.value;
@@ -86,7 +86,7 @@ contract GameWallet is ReentrancyGuard, AccessControl {
         if (amount > s_balances[user]) {
             revert GameWallet__InsufficientBalance();
         }
-        if(amount <= 0){
+        if(amount == 0){
             revert GameWallet__AmountTooSmall();
         }
         
@@ -105,6 +105,37 @@ contract GameWallet is ReentrancyGuard, AccessControl {
         s_balances[user] += amount;
         emit FundsReceivedFromGame(user, msg.sender, amount);
     }
+    // Add near other events in GameWallet
+    event GameFeeForwarded(address indexed gameContract, address indexed recipient, uint256 amount);
+
+    function forwardGameFee(address payable recipient, uint256 amount)
+        external
+        nonReentrant
+        onlyRole(GAME_CONTRACT_ROLE)
+        returns (bool)
+    {
+        if (amount == 0) {
+            revert GameWallet__AmountTooSmall();
+        }
+        if (address(this).balance < amount) {
+            revert GameWallet__InsufficientBalance();
+        }
+
+        // First try to call AdminWallet.depositFee() so AdminWallet can record the fee (requires GameWallet to have GAME_ROLE in AdminWallet)
+        (bool ok, ) = recipient.call{value: amount}(abi.encodeWithSignature("depositFee()"));
+
+        if (!ok) {
+            // Fallback: try plain transfer (calls receive/fallback on recipient)
+            (bool sent, ) = recipient.call{value: amount}("");
+            if (!sent) {
+                revert GameWallet__TransferFailed();
+            }
+        }
+
+        emit GameFeeForwarded(msg.sender, recipient, amount);
+        return true;
+    }
+
 
     // View functions
     function getBalance(address user) external view returns (uint256) {

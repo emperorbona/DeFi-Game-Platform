@@ -22,6 +22,7 @@ contract DiceGame is ReentrancyGuard, VRFConsumerBaseV2 {
     error DiceGame__InsufficientWalletBalance();
     error DiceGame__RequestAlreadyPending();
     error DiceGame__FeeDepositFailed();
+    error DiceGame__CannotJoinOwnGame();
 
     using PriceConverter for uint256;
 
@@ -92,7 +93,7 @@ contract DiceGame is ReentrancyGuard, VRFConsumerBaseV2 {
     // }
 
     function createGame(uint256 stakeAmount) external nonReentrant returns(uint256 gameId) {
-        if (stakeAmount.getConversionRate(s_priceFeed) < MINIMUM_STAKE_USD) {
+        if (stakeAmount.getUsdAmountInEth(s_priceFeed) < MINIMUM_STAKE_USD) {
             revert DiceGame__InsufficientAmountForStake();
         }
 
@@ -131,6 +132,9 @@ contract DiceGame is ReentrancyGuard, VRFConsumerBaseV2 {
         if (game.player1 == address(0)) revert DiceGame__InvalidGame();
         if (game.player2 != address(0)) revert DiceGame__AlreadyJoined();
         if (stakeAmount != game.stake) revert DiceGame__StakeMismatch();
+        if (msg.sender == game.player1) {
+        revert DiceGame__CannotJoinOwnGame(); // Create a new error for clarity
+    }
 
         // Check wallet balance and lock funds
         if (i_gameWallet.getBalance(msg.sender) < stakeAmount) {
@@ -164,6 +168,7 @@ contract DiceGame is ReentrancyGuard, VRFConsumerBaseV2 {
         if (s_gameHasPendingRequest[gameId]) {
             revert DiceGame__RequestAlreadyPending();
         }
+        s_gameHasPendingRequest[gameId] = true;
 
         uint256 requestId = i_vrfCoordinator.requestRandomWords(
             i_gasLane,
@@ -194,6 +199,7 @@ contract DiceGame is ReentrancyGuard, VRFConsumerBaseV2 {
             game.dice2 = roll;
             game.nextTurn = address(0);
         }
+        delete s_gameHasPendingRequest[gameId];
 
         emit DiceRolled(gameId, player, roll);
 
@@ -208,7 +214,7 @@ contract DiceGame is ReentrancyGuard, VRFConsumerBaseV2 {
         uint256 gameFee;
         
 
-        uint256 potUsd = totalPot.getConversionRate(s_priceFeed);
+        uint256 potUsd = totalPot.getUsdAmountInEth(s_priceFeed);
         if (potUsd <= 5e18) {           // 5 USD with 18 decimals
             gameFee = (totalPot * 5) / 100;
         } else {
@@ -219,10 +225,8 @@ contract DiceGame is ReentrancyGuard, VRFConsumerBaseV2 {
         uint256 totalWins = totalPot - gameFee;
 
         if (gameFee > 0) {
-              (bool success, ) = address(i_adminWallet).call{value: gameFee}(
-            abi.encodeWithSignature("depositFee()")
-            );
-            if(!success) {
+            bool success = i_gameWallet.forwardGameFee(payable(i_adminWallet), gameFee);
+            if(!success){
                 revert DiceGame__FeeDepositFailed();
             }
         }
@@ -230,7 +234,7 @@ contract DiceGame is ReentrancyGuard, VRFConsumerBaseV2 {
         if (game.dice1 > game.dice2) {
             game.winner = game.player1;
             i_gameWallet.addWinnings(game.player1, totalWins);
-        } else if (game.dice1 < game.dice2) {
+        } else if (game.dice1 < game.dice2){
             game.winner = game.player2;
             i_gameWallet.addWinnings(game.player2, totalWins);
         } else {
@@ -264,5 +268,12 @@ contract DiceGame is ReentrancyGuard, VRFConsumerBaseV2 {
 
     function getGameWallet() external view returns(address) {
         return address(i_gameWallet);
+    }
+    function getAdminWallet() external view returns(address){
+        return address(i_adminWallet);
+    }
+   
+    function getVrfCoordinator() external view returns (address) {
+        return address(i_vrfCoordinator);
     }
 }

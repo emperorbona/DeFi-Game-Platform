@@ -5,6 +5,7 @@ import {Script} from "forge-std/Script.sol";
 import {DiceGame} from "../../src/dice-game/DiceGame.sol";
 import {HelperConfig} from "./HelperConfig.s.sol";
 import {CreateSubscription, FundSubscription, AddConsumer} from "./Interactions.s.sol";
+import {GameWallet} from "../../src/wallet/GameWallet.sol";
 
 
 contract DeployDiceGame is Script {
@@ -46,6 +47,7 @@ contract DeployDiceGame is Script {
          callbackGasLimit,
          payable(adminWallet)
         );
+         GameWallet(gameWallet).addGameContract(address(diceGame));
         vm.stopBroadcast();
 
         AddConsumer addConsumer = new AddConsumer();

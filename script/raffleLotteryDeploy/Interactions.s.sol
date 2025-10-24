@@ -10,7 +10,7 @@ contract CreateSubscription is Script{
 
     function createNewSubscriptionUsingConfig() public returns(uint64){
         HelperConfig helperConfig = new HelperConfig();
-        (address vrfCoordinator,,,,,,,) = helperConfig.activeNetworkConfig();
+        (,,address vrfCoordinator,,,,,,,) = helperConfig.activeNetworkConfig();
         return createSubscription(vrfCoordinator);
     }
     function createSubscription(address vrfCoordinator) public returns(uint64){
@@ -38,7 +38,7 @@ contract FundSubscription is Script{
 
     function fundSubscriptionUsingConfig() public {
          HelperConfig helperConfig = new HelperConfig();
-        (address vrfCoordinator,,,,uint64 subId,,,address link) = helperConfig.activeNetworkConfig();
+        (,,address vrfCoordinator,,,,uint64 subId,,,address link) = helperConfig.activeNetworkConfig();
         fundSubscription(vrfCoordinator, subId, link);
     }
 
@@ -74,19 +74,19 @@ contract FundSubscription is Script{
 
 contract AddConsumer is Script{
 
-    function addConsumer(address diceGame,address vrfCoordinator,uint64 subId) public{
+    function addConsumer(address raffleLottery,address vrfCoordinator,uint64 subId) public{
         vm.startBroadcast();
-        VRFCoordinatorV2Mock(vrfCoordinator).addConsumer(subId,diceGame);
+        VRFCoordinatorV2Mock(vrfCoordinator).addConsumer(subId,raffleLottery);
         vm.stopBroadcast();
     }
 
-    function addConsumerUsingConfig(address diceGame) public{
+    function addConsumerUsingConfig(address raffleLottery) public{
         HelperConfig helperConfig = new HelperConfig();
-        (address vrfCoordinator,,,,uint64 subId,,,) = helperConfig.activeNetworkConfig();
-        addConsumer(diceGame,vrfCoordinator,subId);
+        (,,address vrfCoordinator,,,,uint64 subId,,,) = helperConfig.activeNetworkConfig();
+        addConsumer(raffleLottery,vrfCoordinator,subId);
     }
     function run() external{
-        address diceGame = DevOpsTools.get_most_recent_deployment("DiceGame", block.chainid);
-        addConsumerUsingConfig(diceGame);
+        address raffleLottery = DevOpsTools.get_most_recent_deployment("RaffleLottery", block.chainid);
+        addConsumerUsingConfig(raffleLottery);
     }
 }
